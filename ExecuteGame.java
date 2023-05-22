@@ -5,10 +5,10 @@ public class ExecuteGame {
         Board board = new Board();
 
         board.printBoard();
-        
-        int black = board.getBlackStone();
-        int white = board.getWhiteStone();
-        board.printBB(board.calcLegalPosition(true));
-        board.printBB(board.calcLegalPosition(false));
+
+        int legalPosition = board.calcLegalPosition(true);
+        int position = legalPosition & -legalPosition;
+        board.riverse(true, position);
+        board.printBoard();
     }
 }

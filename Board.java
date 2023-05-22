@@ -52,24 +52,70 @@ public class Board {
 
     /**
      * 合法手（置くと相手の石を返せる手）を表すbbを計算して返す。
-     * @param isBlackTurn : 現在の手番が黒かどうか
+     * @param own : 手番の側の石を表すbb
+     * @param opponent : 相手の側の石を表すbb
      * @return 合法手を表すbb
      */
     public int calcLegalPosition(boolean isBlackTurn) {
         int own = isBlackTurn ? blackStone : whiteStone;
         int opponent = isBlackTurn ? whiteStone : blackStone;
-        int lines = lineFromPosition(own, opponent, 0x6666, s -> s >> 1);
-        lines |= lineFromPosition(own, opponent, 0x6666, s -> s << 1);
-        lines |= lineFromPosition(own, opponent, 0x0ff0, s -> s >> 4);
-        lines |= lineFromPosition(own, opponent, 0x0ff0, s -> s << 4);
-        lines |= lineFromPosition(own, opponent, 0x0660, s -> s >> 5);
-        lines |= lineFromPosition(own, opponent, 0x0660, s -> s << 5);
-        lines |= lineFromPosition(own, opponent, 0x0660, s -> s >> 3);
-        lines |= lineFromPosition(own, opponent, 0x0660, s -> s << 3);
+        int lines = opponentLineFromPosition(own, opponent, 0x6666, s -> s >> 1) >> 1;
+        lines |= opponentLineFromPosition(own, opponent, 0x6666, s -> s << 1) << 1;
+        lines |= opponentLineFromPosition(own, opponent, 0x0ff0, s -> s >> 4) >> 4;
+        lines |= opponentLineFromPosition(own, opponent, 0x0ff0, s -> s << 4) << 4;
+        lines |= opponentLineFromPosition(own, opponent, 0x0660, s -> s >> 3) >> 3;
+        lines |= opponentLineFromPosition(own, opponent, 0x0660, s -> s << 3) << 3;
+        lines |= opponentLineFromPosition(own, opponent, 0x0660, s -> s >> 5) >> 5;
+        lines |= opponentLineFromPosition(own, opponent, 0x0660, s -> s << 5) << 5;
         return lines & ~(own | opponent);
     }
 
-    private int lineFromPosition(
+    
+    /**
+     * 
+     * @param isBlackTurn
+     * @param position
+     */
+    public void riverse(boolean isBlackTurn, int position) {
+        if (isBlackTurn) {
+            int riversed = calcRiversed(blackStone, whiteStone, position);
+            blackStone = blackStone ^ riversed ^ position;
+            whiteStone = whiteStone ^ riversed;
+        } else {
+            int riversed = calcRiversed(whiteStone, blackStone, position);
+            blackStone = blackStone ^ riversed;
+            whiteStone = whiteStone ^ riversed ^ position;
+        }
+    }
+
+    private int calcRiversed(int own, int opponent, int position) {
+        int riversed = riversedLine(own, opponent, position, 0x6666, s -> s >> 1);
+        riversed |= riversedLine(own, opponent, position, 0x6666, s -> s << 1);
+        riversed |= riversedLine(own, opponent, position, 0x0ff0, s -> s >> 4);
+        riversed |= riversedLine(own, opponent, position, 0x0ff0, s -> s << 4);
+        riversed |= riversedLine(own, opponent, position, 0x0660, s -> s >> 3);
+        riversed |= riversedLine(own, opponent, position, 0x0660, s -> s << 3);
+        riversed |= riversedLine(own, opponent, position, 0x0660, s -> s >> 5);
+        riversed |= riversedLine(own, opponent, position, 0x0660, s -> s << 5);
+        return riversed;
+    }
+
+    private int riversedLine(
+        int own, 
+        int opponent, 
+        int position,
+        int mask,
+        Function<Integer, Integer> directionShift) 
+    {
+        int opponentLine = opponentLineFromPosition(position, opponent, mask, directionShift);
+        if ((directionShift.apply(opponentLine) & own) != 0) {
+            return opponentLine;
+        } else {
+            return 0;
+        }
+    }
+
+    private int opponentLineFromPosition(
         int position, 
         int opponent, 
         int mask, 
@@ -78,7 +124,7 @@ public class Board {
         int candidate = opponent & mask;
         int line = directionShift.apply(position) & candidate;
         line |= directionShift.apply(line) & candidate;
-        return directionShift.apply(line);
+        return line;
     }
 
 

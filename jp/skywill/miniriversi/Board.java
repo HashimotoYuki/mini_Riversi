@@ -23,13 +23,20 @@ public class Board {
         for (int i = 0; i < HEIGHT; i++) {
             for (int j = 0; j < WIDTH; j++) {
                 if ((blackStone & mask) != 0x0000) {
-                    System.out.print('x');
+                    System.out.print("x ");
                 } else if ((whiteStone & mask) != 0x0000) {
-                    System.out.print('o');
+                    System.out.print("o ");
                 } else {
-                    System.out.print('.');
+                    System.out.print(". ");
                 }
                 mask <<= 1;
+            }
+
+            System.out.print("  ");
+            for (int j = 0; j < WIDTH; j++) {
+                int index = i * HEIGHT + j;
+                int c = index <= 9 ? '0'+index : 'a'+(index-10);
+                System.out.printf("%c ", c);
             }
             System.out.println();
         }
@@ -38,11 +45,10 @@ public class Board {
 
     /**
      * 石の数をカウントして返す。
-     * @param stone : カウントの対象となる石のbb
+     * @param stone : 石の配置を表すbit列 
      * @return 石の数
      */
-    public int countStone(boolean isBlackTurn) {
-        int stone = isBlackTurn ? blackStone : whiteStone;
+    public int countStone(int stone) {
         stone = (stone & 0x5555) + (stone >> 1 & 0x5555);
         stone = (stone & 0x3333) + (stone >> 2 & 0x3333);
         stone = (stone & 0x0f0f) + (stone >> 4 & 0x0f0f);
@@ -73,7 +79,6 @@ public class Board {
         lines |= opponentLineFromPosition(own, opponent, 0x0660, s -> s << 5) << 5;
         return lines & ~(own | opponent);
     }
-
     
     /**
      * 石を反転させる。
@@ -93,6 +98,13 @@ public class Board {
         }
     }
 
+    /**
+     * 
+     * @param own
+     * @param opponent
+     * @param position
+     * @return
+     */
     public int calcRiversed(int own, int opponent, int position) {
         int riversed = riversedLine(own, opponent, position, 0x6666, s -> s >> 1);
         riversed |= riversedLine(own, opponent, position, 0x6666, s -> s << 1);

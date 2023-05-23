@@ -9,6 +9,9 @@ public class Board {
     private int blackStone;
     private int whiteStone;
 
+    /**
+     * 初期配置の盤面を生成する。
+     */
     public Board() {
         this.blackStone = 0x0240;
         this.whiteStone = 0x0420;
@@ -44,27 +47,37 @@ public class Board {
     }
 
     /**
-     * 石の数をカウントして返す。
-     * @param stone : 石の配置を表すbit列 
+     * 黒石、または白石の数をカウントして返す。
+     * @param isBlack : true -> 黒石をカウント、false -> 白石をカウント
      * @return 石の数
      */
-    public int countStone(int stone) {
-        stone = (stone & 0x5555) + (stone >> 1 & 0x5555);
-        stone = (stone & 0x3333) + (stone >> 2 & 0x3333);
-        stone = (stone & 0x0f0f) + (stone >> 4 & 0x0f0f);
-        stone = (stone & 0x00ff) + (stone >> 8 & 0x00ff);
-        return stone;
-    }
-
-    public boolean isFinishedGame() {
-        return (calcLegalPosition(true) == 0 && calcLegalPosition(false) == 0);
+    public int countStone(boolean isBlack) {
+        if (isBlack) {
+            return countBit(blackStone);
+        } else {
+            return countBit(whiteStone);
+        }
     }
 
     /**
-     * 合法手（置くと相手の石を返せる手）を表すbbを計算して返す。
-     * @param own : 手番の側の石を表すbb
-     * @param opponent : 相手の側の石を表すbb
-     * @return 合法手を表すbb
+     * 引数で与えられたbit列において、下位16bitに含まれる1の数をカウントして返す。
+     * ただし、上位16bitがすべて0であることは保証されているものとする。
+     * @param bit : 対象となるbit列 
+     * @return {@code bit}の下位16bitに含まれる1の数
+     */
+    public int countBit(int bit) {
+        bit = (bit & 0x5555) + (bit >> 1 & 0x5555);
+        bit = (bit & 0x3333) + (bit >> 2 & 0x3333);
+        bit = (bit & 0x0f0f) + (bit >> 4 & 0x0f0f);
+        bit = (bit & 0x00ff) + (bit >> 8 & 0x00ff);
+        return bit;
+    }
+
+    /**
+     * 合法手（置くと相手の石を返せる手）を表すビット列を計算して返す。
+     * 合法手が複数ある場合も、それらすべてを含むビット列が返される。
+     * @param isBlackTurn : 現在の手番が黒かどうか
+     * @return 合法手を表すbit列
      */
     public int calcLegalPosition(boolean isBlackTurn) {
         int own = isBlackTurn ? blackStone : whiteStone;
@@ -82,11 +95,11 @@ public class Board {
     
     /**
      * 石を反転させる。
-     * positionが合法手であることは保証されているものとする。
-     * @param isBlackTurn
-     * @param position
+     * ただし、positionが合法手（置くと相手の石を返せる手）であることは保証されているものとする。
+     * @param isBlackTurn : 現在の手番が黒かどうか
+     * @param position : 石を置く場所を表すbit列
      */
-    public void riverse(boolean isBlackTurn, int position) {
+    public void reverse(boolean isBlackTurn, int position) {
         if (isBlackTurn) {
             int riversed = calcRiversed(blackStone, whiteStone, position);
             blackStone = blackStone ^ riversed ^ position;
@@ -99,13 +112,20 @@ public class Board {
     }
 
     /**
-     * 
-     * @param own
-     * @param opponent
-     * @param position
-     * @return
+     * 石を置いたときに反転する石を計算して返す。
+     * @param isBlackTurn : 現在の手番が黒かどうか
+     * @param position : 石を置く場所を表すbit列
+     * @return : 反転する石を表すbit列
      */
-    public int calcRiversed(int own, int opponent, int position) {
+    public int calcRiversed(boolean isBlackTurn, int position) {
+        if (isBlackTurn) {
+            return calcRiversed(blackStone, whiteStone, position);
+        } else {
+            return calcRiversed(whiteStone, blackStone, position);
+        }
+    }
+
+    private int calcRiversed(int own, int opponent, int position) {
         int riversed = riversedLine(own, opponent, position, 0x6666, s -> s >> 1);
         riversed |= riversedLine(own, opponent, position, 0x6666, s -> s << 1);
         riversed |= riversedLine(own, opponent, position, 0x0ff0, s -> s >> 4);
@@ -144,10 +164,19 @@ public class Board {
         return line;
     }
 
+    /**
+     * ゲームが終了しているかどうかを判定する。
+     * @return 黒と白の両方に置ける場所がない -> true
+     */
+    public boolean isFinishedGame() {
+        return (calcLegalPosition(true) == 0 && calcLegalPosition(false) == 0);
+    }
 
     /**
-     * 【デバッグ用】ビットボードを表示する。
-     * @param bb
+     * 【デバッグ用】
+     * bit列を盤面の形式で表示する。
+     * ビットが立っているマスを'#', そうでないマスを'.'で表す。
+     * @param bb : 表示させたいbit列
      */
     public void printBB(int bb) {
         int mask = 0x0001;

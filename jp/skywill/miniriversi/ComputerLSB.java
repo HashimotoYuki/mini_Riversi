@@ -1,7 +1,8 @@
 package jp.skywill.miniriversi;
 
-public class Computer extends GameParticipant {
-    public Computer(boolean isBlack) {
+public class ComputerLSB extends GameParticipant {
+    
+    public ComputerLSB(boolean isBlack) {
         super(isBlack);
     }
 

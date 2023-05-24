@@ -28,6 +28,15 @@ public class Board {
     }
 
     /**
+     * 既存の盤面を複製する。
+     * @param board 複製元の盤面
+     */
+    public Board(Board board) {
+        this.blackStone = board.getBlackStone();
+        this.whiteStone = board.getWhiteStone();
+    }
+
+    /**
      * 盤面の状態を表示する。
      * 黒石を'x'、白石を'o'で表す。
      */

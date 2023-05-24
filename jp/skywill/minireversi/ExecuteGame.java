@@ -16,10 +16,10 @@ public class ExecuteGame {
             p2 = new Player(false);
         } else {
             if (decideIfPlayerIsBlack()) {
-                p1 = new Player(true);
-                p2 = new ComputerMaxRev(false);
+                p1 = new ComputerMiniMax(true);
+                p2 = new ComputerMiniMax(false);
             } else {
-                p1 = new ComputerMaxRev(true);
+                p1 = new ComputerMiniMax(true);
                 p2 = new Player(false);
             }
         } 
